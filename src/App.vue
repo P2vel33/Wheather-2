@@ -12,7 +12,7 @@
           <form @submit.prevent>
             <input v-model="city" type="text" placeholder="Введите название города" >
           </form>
-          <button @click="getWheatherByCity()">Узнать</button>
+          <button @click="successCity(city)">Узнать</button>
           <h5>
             <span id="city">Погода в {{ city }}</span>
           </h5>
@@ -51,6 +51,7 @@
 export default {
   data() {
     return {
+      // timer: setTimeout(this.getWheatherByCity(city),1000),
       city: "",
       errorMessage: "",
       loading: true,
@@ -59,6 +60,8 @@ export default {
     }
   },
 
+
+  
   computed: {
     name(){
       return this.data != null ? this.data.weatherData.city : '';
@@ -81,21 +84,25 @@ export default {
     }
   },
 
+
+  
   watch: {
     city(value){
-      console.log(value);
+      value != '' ? this.timer = null : console.log('ad');
     }
   },
 
-  methods: {
 
+  
+  methods: {
 
     async getWheatherByCity(city){
       try {
+        console.log(city);
         const response = await fetch(
           `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${this.API_KEY}&lang=ru`
         );
-        console.log(response.json());
+        // console.log(response.json());
         return await response.json();
       } catch (e) {
         this.errorMessage = "Can't load weather data from the remote host";
@@ -113,6 +120,17 @@ export default {
       }
     },
     
+    async successCity(city){
+      const weather = await this.getWheatherByCity(city);
+      if (!weather) {
+        this.errorMessage = "Can't load weather data from ";
+        this.loading = false;
+      } else {
+        this.loading = false;
+        this.setWeatherData(weather);
+      }
+    },
+
     async success(pos) {
       const { latitude, longitude } = pos.coords;
       const weather = await this.getWeatherByCoords(latitude, longitude);
@@ -124,6 +142,7 @@ export default {
         this.setWeatherData(weather);
       }
     },
+    
     async error(err) {
       if (err.code === 1) {
         console.log("Not enough permissions");
@@ -153,8 +172,6 @@ export default {
       }
     },
 
-    
-
     setWeatherData(data) {
       this.weatherData = {
         city: data?.name,
@@ -165,6 +182,7 @@ export default {
       };
     },
   },
+  
   mounted() {
     navigator.geolocation.getCurrentPosition(this.success, this.error, {
       enableHighAccuracy: true,
