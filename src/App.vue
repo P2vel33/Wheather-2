@@ -14,7 +14,7 @@
           </form>
           <button @click="successCity(city)">Узнать</button>
           <h5>
-            <span id="city">Погода в {{ city }}</span>
+            <span id="city">Погода в {{ weatherData.city }}</span>
           </h5>
           <div>
             <span id="value">{{ weatherData.value }}</span>
@@ -51,7 +51,7 @@
 export default {
   data() {
     return {
-      // timer: setTimeout(this.getWheatherByCity(city),1000),
+      timer: null,
       city: "",
       errorMessage: "",
       loading: true,
@@ -60,8 +60,6 @@ export default {
     }
   },
 
-
-  
   computed: {
     name(){
       return this.data != null ? this.data.weatherData.city : '';
@@ -84,25 +82,21 @@ export default {
     }
   },
 
-
-  
   watch: {
     city(value){
-      value != '' ? this.timer = null : console.log('ad');
+      this.timer = setTimeout(()=>{
+        this.successCity(value);
+      },500)
     }
   },
 
-
-  
   methods: {
 
     async getWheatherByCity(city){
       try {
-        console.log(city);
         const response = await fetch(
           `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${this.API_KEY}&lang=ru`
         );
-        // console.log(response.json());
         return await response.json();
       } catch (e) {
         this.errorMessage = "Can't load weather data from the remote host";
@@ -131,6 +125,7 @@ export default {
       }
     },
 
+
     async success(pos) {
       const { latitude, longitude } = pos.coords;
       const weather = await this.getWeatherByCoords(latitude, longitude);
@@ -142,7 +137,6 @@ export default {
         this.setWeatherData(weather);
       }
     },
-    
     async error(err) {
       if (err.code === 1) {
         console.log("Not enough permissions");
@@ -172,6 +166,8 @@ export default {
       }
     },
 
+    
+
     setWeatherData(data) {
       this.weatherData = {
         city: data?.name,
@@ -182,7 +178,6 @@ export default {
       };
     },
   },
-  
   mounted() {
     navigator.geolocation.getCurrentPosition(this.success, this.error, {
       enableHighAccuracy: true,
